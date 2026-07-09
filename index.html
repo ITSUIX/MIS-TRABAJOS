@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Las Leyes de Newton en Acción</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #2c5282;
+            --secondary: #48bb78;
+            --dark: #2d3748;
+            --light: #f7fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            text-align: center;
+            padding: 3rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        header p {
+            margin: 0.5rem 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .intro {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .laws-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .law-card {
+            background: white;
+            border-top: 5px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .law-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .law-card h3 {
+            color: var(--primary-dark);
+            margin-top: 0;
+        }
+
+        .badge {
+            background-color: #ebf8ff;
+            color: var(--primary);
+            padding: 0.25rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Simulador Interactivo */
+        .simulator-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            margin-top: 3rem;
+        }
+
+        .simulator-section h2 {
+            color: var(--primary-dark);
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            background: #edf2f7;
+            padding: 1.5rem;
+            border-radius: 6px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-launch {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-launch:hover {
+            background-color: #38a169;
+        }
+
+        /* Área de Animación */
+        .track-container {
+            position: relative;
+            background: #e2e8f0;
+            height: 150px;
+            border-radius: 6px;
+            overflow: hidden;
+            border-bottom: 8px solid #cbd5e0;
+            margin-bottom: 1rem;
+        }
+
+        .wood-block {
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            width: 80px;
+            height: 40px;
+            background-color: #b7791f;
+            border: 2px solid #975a16;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: left 0.1s linear;
+        }
+
+        .pulley-system {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 60px;
+            height: 120px;
+            border-left: 4px solid #4a5568;
+            border-top: 4px solid #4a5568;
+        }
+
+        .bucket {
+            position: absolute;
+            right: -12px;
+            top: 40px;
+            width: 30px;
+            height: 35px;
+            background-color: #3182ce;
+            border-radius: 0 0 8px 8px;
+            transition: top 0.1s linear;
+        }
+
+        .string {
+            position: absolute;
+            height: 2px;
+            background-color: #a0aec0;
+            z-index: 1;
+        }
+
+        #result-message {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-height: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            background-color: var(--dark);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Demostración Física: Las Leyes de Newton</h1>
+        <p>Análisis interactivo basado en el experimento del bloque de madera y polea</p>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h2>Acerca del Proyecto</h2>
+            <p>Este proyecto utiliza un sistema de tracción simple compuesto por un <strong>bloque de madera</strong> de doble cara (una lisa y otra rugosa), un hilo, una estructura de soporte que actúa como <strong>polea</strong> y un <strong>pequeño balde</strong> donde se añade masa (piedras) para generar fuerza motriz.</p>
+        </section>
+
+        <h2>¿Por qué cumple con las 3 Leyes de Newton?</h2>
+        
+        <div class="laws-container">
+            <div class="law-card">
+                <span class="badge">1ª Ley</span>
+                <h3>Ley de la Inercia</h3>
+                <p><strong>En el experimento:</strong> Al inicio, tanto el bloque de madera en la mesa como el balde están completamente inmóviles. Permanecen en reposo absoluto porque no hay ninguna fuerza neta actuando sobre ellos que supere su estado inicial hasta que se añaden las piedras.</p>
+            </div>
+
+            <div class="law-card">
+                <span class="badge">2ª Ley</span>
+                <h3>Ley de la Masa y Aceleración</h3>
+                <p><strong>En el experimento:</strong> Se observa claramente al cambiar de superficie. La cara rugosa genera mayor <strong>fuerza de fricción</strong> (resistencia). Con 3 piedras, la fuerza es insuficiente para acelerar la masa robusta. Se requiere añadir más piedras (más fuerza) para lograr vencer la resistencia y generar una aceleración notable.</p>
+            </div>
+
+            <div class="law-card">
+                <span class="badge">3ª Ley</span>
+                <h3>Acción y Reacción</h3>
+                <p><strong>En el experimento:</strong> La Tierra atrae a las piedras hacia abajo (Gravedad = Acción), el balde tensa la cuerda y esta tensión "jala" al bloque de madera sobre la mesa. Al mismo tiempo, el bloque ejerce una fuerza de fricción contraria sobre la mesa (Reacción), regulando el movimiento del sistema.</p>
+            </div>
+        </div>
+
+        <section class="simulator-section">
+            <h2>Simulador Virtual del Experimento</h2>
+            <p style="text-align: center; color: #718096;">Configura las variables observadas en el video y mira qué sucede.</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="surface">Tipo de Superficie (Bloque):</label>
+                    <select id="surface">
+                        <option value="lisa">Cara Lisa (Menor Fricción)</option>
+                        <option value="rugosa">Cara Rugosa / Robusta (Mayor Fricción)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="stones">Fuerza (Cantidad de Piedras):</label>
+                    <select id="stones">
+                        <option value="3">3 Piedras (Fuerza Baja)</option>
+                        <option value="6">6 Piedras (Fuerza Alta)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group" style="justify-content: flex-end;">
+                    <button class="btn-launch" onclick="runSimulation()">Iniciar Experimento</button>
+                </div>
+            </div>
+
+            <div class="track-container">
+                <div class="wood-block" id="block">Madera</div>
+                <div class="pulley-system">
+                    <div class="bucket" id="bucket"></div>
+                </div>
+            </div>
+            
+            <div id="result-message">Selecciona las opciones y presiona "Iniciar Experimento".</div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Proyecto Escolar de Ciencias — Leyes de Newton © 2026</p>
+    </footer>
+
+    <script>
+        function runSimulation() {
+            const surface = document.getElementById('surface').value;
+            const stones = document.getElementById('stones').value;
+            const block = document.getElementById('block');
+            const bucket = document.getElementById('bucket');
+            const message = document.getElementById('result-message');
+
+            // Reset posiciones anteriores
+            block.style.left = '10px';
+            bucket.style.top = '40px';
+            message.innerText = "Analizando fuerzas...";
+            message.style.color = "inherit";
+
+            setTimeout(() => {
+                if (surface === 'lisa' && stones === '3') {
+                    // Se mueve fácil con pocas piedras
+                    animateSystem(300, 100);
+                    message.innerText = "¡Éxito! La cara lisa ofrece poca resistencia (fricción). 3 piedras son suficientes para acelerar el bloque.";
+                    message.style.color = "var(--secondary)";
+                } 
+                else if (surface === 'rugosa' && stones === '3') {
+                    // No se mueve por la fricción alta
+                    animateSystem(10, 40); 
+                    message.innerText = "Inmóvil: La fuerza de fricción de la cara rugosa es mayor que la fuerza de tracción de las 3 piedras (1ª Ley / Inercia).";
+                    message.style.color = "#e53e3e";
+                } 
+                else if (surface === 'rugosa' && stones === '6') {
+                    // Se mueve porque añadieron más fuerza
+                    animateSystem(300, 100);
+                    message.innerText = "¡Éxito! Al agregar más piedras (más fuerza), vencimos la inercia y la fricción de la cara rugosa (2ª Ley).";
+                    message.style.color = "var(--secondary)";
+                }
+                else if (surface === 'lisa' && stones === '6') {
+                    // Se mueve super rápido
+                    animateSystem(300, 100);
+                    message.innerText = "¡Éxito! Poca fricción y mucha fuerza producen una aceleración máxima (2ª Ley: F=m·a).";
+                    message.style.color = "var(--secondary)";
+                }
+            }, 600);
+        }
+
+        function animateSystem(blockLeft, bucketTop) {
+            const block = document.getElementById('block');
+            const bucket = document.getElementById('bucket');
+            
+            block.style.transition = "left 1.5s ease-in-out";
+            bucket.style.transition = "top 1.5s ease-in-out";
+            
+            block.style.left = blockLeft + 'px';
+            bucket.style.top = bucketTop + 'px';
+        }
+    </script>
+</body>
+</html>
