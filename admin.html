@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Panel de Comentarios</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                'Segoe UI',
+                Tahoma,
+                Geneva,
+                Verdana,
+                sans-serif;
+
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        header {
+            background:
+                linear-gradient(
+                    135deg,
+                    #2b6cb0,
+                    #2c5282
+                );
+
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .box {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+
+            box-shadow:
+                0 4px 15px
+                rgba(0,0,0,0.08);
+
+            margin-bottom: 2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #2b6cb0;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2c5282;
+        }
+
+        .logout {
+            background: #e53e3e;
+            float: right;
+        }
+
+        .comment {
+            border-left: 4px solid #2b6cb0;
+            background: #f7fafc;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+        }
+
+        .comment-name {
+            font-weight: bold;
+            color: #2b6cb0;
+            font-size: 1.1rem;
+        }
+
+        .comment-date {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .delete {
+            background: #e53e3e;
+            margin-top: 0.7rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #2b6cb0;
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>🔒 Panel de Administración</h1>
+
+    <p>
+        Comentarios de los visitantes
+    </p>
+
+</header>
+
+
+<main>
+
+    <!-- LOGIN -->
+
+    <section
+        id="loginSection"
+        class="box"
+    >
+
+        <h2>Iniciar sesión</h2>
+
+        <p>
+            Esta sección es solamente para el administrador.
+        </p>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Correo electrónico"
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Contraseña"
+        >
+
+        <button onclick="login()">
+            🔐 Entrar
+        </button>
+
+        <div
+            id="loginMessage"
+            class="message hidden"
+        ></div>
+
+        <a
+            href="index.html"
+            class="back"
+        >
+            ← Volver a la página
+        </a>
+
+    </section>
+
+
+    <!-- PANEL -->
+
+    <section
+        id="adminSection"
+        class="box hidden"
+    >
+
+        <button
+            class="logout"
+            onclick="logout()"
+        >
+            Cerrar sesión
+        </button>
+
+        <h2>
+            💬 Comentarios recibidos
+        </h2>
+
+        <button onclick="cargarComentarios()">
+            🔄 Actualizar comentarios
+        </button>
+
+        <div
+            id="commentsList"
+            style="margin-top:2rem;"
+        ></div>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+    // =====================================================
+    // SUPABASE
+    // =====================================================
+
+    const SUPABASE_URL =
+        "TU_SUPABASE_URL";
+
+    const SUPABASE_ANON_KEY =
+        "TU_SUPABASE_ANON_KEY";
+
+
+    const supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+
+    // =====================================================
+    // COMPROBAR SESIÓN
+    // =====================================================
+
+    async function comprobarSesion() {
+
+        const {
+            data: { session }
+        } = await supabaseClient.auth.getSession();
+
+
+        if (session) {
+
+            mostrarAdmin();
+
+            cargarComentarios();
+
+        }
+
+    }
+
+
+    comprobarSesion();
+
+
+    // =====================================================
+    // LOGIN
+    // =====================================================
+
+    async function login() {
+
+        const email =
+            document
+                .getElementById("email")
+                .value
+                .trim();
+
+
+        const password =
+            document
+                .getElementById("password")
+                .value;
+
+
+        if (!email || !password) {
+
+            mostrarLoginError(
+                "Escribe tu correo y contraseña."
+            );
+
+            return;
+        }
+
+
+        const { error } =
+            await supabaseClient.auth.signInWithPassword({
+
+                email: email,
+
+                password: password
+
+            });
+
+
+        if (error) {
+
+            console.error(error);
+
+            mostrarLoginError(
+                "Correo o contraseña incorrectos."
+            );
+
+            return;
+        }
+
+
+        mostrarAdmin();
+
+        cargarComentarios();
+
+    }
+
+
+    // =====================================================
+    // CERRAR SESIÓN
+    // =====================================================
+
+    async function logout() {
+
+        await supabaseClient.auth.signOut();
+
+
+        document
+            .getElementById("adminSection")
+            .classList.add("hidden");
+
+
+        document
+            .getElementById("loginSection")
+            .classList.remove("hidden");
+
+    }
+
+
+    // =====================================================
+    // MOSTRAR ADMIN
+    // =====================================================
+
+    function mostrarAdmin() {
+
+        document
+            .getElementById("loginSection")
+            .classList.add("hidden");
+
+
+        document
+            .getElementById("adminSection")
+            .classList.remove("hidden");
+
+    }
+
+
+    // =====================================================
+    // CARGAR COMENTARIOS
+    // =====================================================
+
+    async function cargarComentarios() {
+
+        const commentsList =
+            document.getElementById("commentsList");
+
+
+        commentsList.innerHTML =
+            "<p>⏳ Cargando comentarios...</p>";
+
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+
+            .from("comentarios")
+
+            .select("*")
+
+            .order(
+                "creado_en",
+                {
+                    ascending: false
+                }
+            );
+
+
+        if (error) {
+
+            console.error(error);
+
+            commentsList.innerHTML =
+                "<p>❌ No se pudieron cargar los comentarios.</p>";
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            commentsList.innerHTML =
+                "<p>📭 Todavía no hay comentarios.</p>";
+
+            return;
+        }
+
+
+        commentsList.innerHTML = "";
+
+
+        data.forEach(comentario => {
+
+            const article =
+                document.createElement("article");
+
+
+            article.className =
+                "comment";
+
+
+            const fecha =
+                new Date(
+                    comentario.creado_en
+                ).toLocaleString(
+                    "es-ES"
+                );
+
+
+            article.innerHTML = `
+
+                <div class="comment-name">
+                    ${escapeHTML(comentario.nombre)}
+                </div>
+
+                <div class="comment-date">
+                    📅 ${fecha}
+                </div>
+
+                <p>
+                    ${escapeHTML(comentario.comentario)}
+                </p>
+
+                <button
+                    class="delete"
+                    onclick="eliminarComentario(${comentario.id})"
+                >
+                    🗑️ Eliminar
+                </button>
+
+            `;
+
+
+            commentsList.appendChild(article);
+
+        });
+
+    }
+
+
+    // =====================================================
+    // ELIMINAR COMENTARIO
+    // =====================================================
+
+    async function eliminarComentario(id) {
+
+        const confirmar =
+            confirm(
+                "¿Seguro que quieres eliminar este comentario?"
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        const { error } =
+            await supabaseClient
+
+                .from("comentarios")
+
+                .delete()
+
+                .eq("id", id);
+
+
+        if (error) {
+
+            console.error(error);
+
+            alert(
+                "❌ No se pudo eliminar el comentario."
+            );
+
+            return;
+        }
+
+
+        cargarComentarios();
+
+    }
+
+
+    // =====================================================
+    // SEGURIDAD
+    // =====================================================
+
+    function escapeHTML(text) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            text;
+
+        return div.innerHTML;
+
+    }
+
+
+    // =====================================================
+    // ERROR DE LOGIN
+    // =====================================================
+
+    function mostrarLoginError(texto) {
+
+        const message =
+            document.getElementById(
+                "loginMessage"
+            );
+
+
+        message.innerText =
+            texto;
+
+
+        message.className =
+            "message error";
+
+    }
+
+</script>
+
+</body>
+
+</html>
